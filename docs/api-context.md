@@ -7,8 +7,9 @@ Ubicación local del código: `D:\Descargas\API de viajes\AppReservasAPI`.
 
 | | Valor |
 |---|---|
-| Base URL (dev http) | `http://localhost:5098` |
-| Base URL (dev https) | `https://localhost:7028` |
+| Base URL (producción) | `http://ViajesAPI.somee.com` |
+| Base URL (dev local http) | `http://localhost:5098` |
+| Base URL (dev local https) | `https://localhost:7028` |
 | Auth | JWT Bearer (expira a los 120 min) |
 | **API Key (obligatoria en todo `/api`)** | header `X-API-KEY` |
 
@@ -20,8 +21,8 @@ Ubicación local del código: `D:\Descargas\API de viajes\AppReservasAPI`.
 Variables de entorno (ver [`.env.example`](../.env.example)):
 
 ```
-API_BASE_URL=http://localhost:5098
-API_KEY=...   # X-API-KEY que espera el backend
+API_BASE_URL=http://ViajesAPI.somee.com   # o http://localhost:5098 en local
+API_KEY=...                                # X-API-KEY que espera el backend
 ```
 
 ## Endpoints de autenticación
@@ -74,4 +75,4 @@ CRUD disponible (todos requieren API Key; la mayoría además JWT): `Ciudades`, 
 `Destinos`, `Viajes`, `TipoViajes`, `Disponibilidades`, `Reservas`, `PasajeroReservas`,
 `EstadoReservas`, `HistorialEstadoReservas`, `Pagos`, `EstadoPagos`, `MetodoPagos`,
 `Usuarios`, `Roles`, `Permisos`, `Pantallas`, `RolPantallaPermisos`.
-Swagger: `http://localhost:5098/swagger`.
+Swagger: `http://ViajesAPI.somee.com/swagger` (o `http://localhost:5098/swagger` en local).
