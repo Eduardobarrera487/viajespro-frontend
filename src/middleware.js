@@ -1,27 +1,68 @@
 import { NextResponse } from "next/server";
 
 const SESSION_COOKIE = "vp_session";
+const ADMIN_PATHS = ["/admin", "/vendedor/admin"];
 
-/**
- * Toda la app es privada salvo `/auth`. Sin la cookie `vp_session`, cualquier
- * ruta redirige a /auth (recordando a dónde volver con `next`). La verificación
- * real del JWT se hace además en cada Server Component / Server Action.
- */
+function parseSessionCookie(rawValue) {
+  if (!rawValue) return null;
+
+  const candidates = [rawValue];
+
+  try {
+    candidates.push(decodeURIComponent(rawValue));
+  } catch {
+    // Si no se puede decodificar, seguimos con el valor original.
+  }
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // Intentar siguiente variante.
+    }
+  }
+
+  return null;
+}
+
+function hasAdminRole(usuario) {
+  if (!usuario) return false;
+
+  const roleName = String(usuario.Rol ?? usuario.rol ?? usuario.role ?? usuario.Role ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (["admin", "administrador", "administrator"].includes(roleName)) {
+    return true;
+  }
+
+  const rolId = Number(usuario.RolId ?? usuario.rolId ?? usuario.roleId);
+  return Number.isFinite(rolId) && rolId === 1;
+}
+
 export function middleware(request) {
   const { pathname, search } = request.nextUrl;
-  const hasSession = Boolean(request.cookies.get(SESSION_COOKIE)?.value);
+  const rawSession = request.cookies.get(SESSION_COOKIE)?.value;
+  const hasSession = Boolean(rawSession);
   const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");
+  const isAdminRoute = ADMIN_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
 
-  // Ruta privada sin sesión → login, recordando a dónde volver.
   if (!hasSession && !isAuthRoute) {
     const url = new URL("/auth", request.url);
     url.searchParams.set("next", pathname + search);
     return NextResponse.redirect(url);
   }
 
-  // Ya logueado entrando a /auth → home.
   if (hasSession && isAuthRoute) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  if (hasSession && isAdminRoute) {
+    const session = parseSessionCookie(rawSession);
+
+    if (!hasAdminRole(session?.usuario)) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return NextResponse.next();

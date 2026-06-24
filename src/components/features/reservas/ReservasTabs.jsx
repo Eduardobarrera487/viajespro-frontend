@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ReservaCard, refReserva } from "@/components/features/reservas/ReservaCard";
+
+import { ReservaCard } from "@/components/features/reservas/ReservaCard";
 
 const TABS = [
   { id: "proxima", label: "Próximas" },
@@ -9,103 +10,90 @@ const TABS = [
   { id: "cancelada", label: "Canceladas" },
 ];
 
-/**
- * Tabs del historial de reservas (Próximas / Pasadas / Canceladas) con búsqueda.
- * Recibe las reservas del usuario ya categorizadas desde el Server Component.
- *
- * @param {{ reservas: Array<{
- *   reservaId: number, estado: string, categoria: string, viajeId?: number,
- *   titulo: string, fecha?: string, cantidadPersonas: number, total: number
- * }> }} props
- */
-export function ReservasTabs({ reservas }) {
-  const [tab, setTab] = useState("proxima");
+function normalize(value) {
+  return String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export function ReservasTabs({ reservas = [] }) {
+  const [activeTab, setActiveTab] = useState("proxima");
   const [query, setQuery] = useState("");
 
   const counts = useMemo(() => {
-    const c = { proxima: 0, pasada: 0, cancelada: 0 };
-    for (const r of reservas) if (c[r.categoria] !== undefined) c[r.categoria] += 1;
-    return c;
+    return reservas.reduce(
+      (acc, reserva) => {
+        acc[reserva.categoria] = (acc[reserva.categoria] || 0) + 1;
+        return acc;
+      },
+      { proxima: 0, pasada: 0, cancelada: 0 },
+    );
   }, [reservas]);
 
-  const visibles = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return reservas
-      .filter((r) => r.categoria === tab)
-      .filter((r) =>
-        !q ||
-        r.titulo?.toLowerCase().includes(q) ||
-        refReserva(r.reservaId).toLowerCase().includes(q),
-      );
-  }, [reservas, tab, query]);
+  const filtered = useMemo(() => {
+    const q = normalize(query);
+
+    return reservas.filter((reserva) => {
+      if (reserva.categoria !== activeTab) return false;
+      if (!q) return true;
+
+      return [
+        reserva.titulo,
+        reserva.destino,
+        reserva.estado,
+        reserva.reservaId,
+        `VP-${String(reserva.reservaId || 0).padStart(4, "0")}`,
+      ]
+        .map(normalize)
+        .some((value) => value.includes(q));
+    });
+  }, [activeTab, query, reservas]);
 
   return (
-    <div className="mt-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Tabs */}
-        <div role="tablist" className="inline-flex gap-1 rounded-xl bg-slate-100 p-1">
-          {TABS.map(({ id, label }) => {
-            const active = tab === id;
+    <div className="mt-8 space-y-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex w-full gap-2 overflow-x-auto rounded-3xl bg-slate-100 p-1 lg:w-auto">
+          {TABS.map((tab) => {
+            const active = activeTab === tab.id;
+
             return (
               <button
-                key={id}
+                key={tab.id}
                 type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(id)}
-                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                  active ? "bg-brand-600 text-white shadow-sm" : "text-slate-600 hover:text-slate-900"
+                onClick={() => setActiveTab(tab.id)}
+                className={`shrink-0 rounded-2xl px-5 py-3 text-sm font-black transition ${
+                  active
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
+                    : "text-slate-600 hover:bg-white hover:text-slate-950"
                 }`}
               >
-                {label}
-                <span className={active ? "ml-1.5 text-white/80" : "ml-1.5 text-slate-400"}>
-                  {counts[id]}
-                </span>
+                {tab.label} <span className={active ? "text-blue-100" : "text-slate-400"}>{counts[tab.id] || 0}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Búsqueda */}
-        <div className="relative sm:w-72">
-          <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
+        <label className="relative block w-full lg:max-w-sm">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">⌕</span>
           <input
-            type="search"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por destino o ID (ej. VP-0001)"
-            className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Buscar por destino o ID"
+            className="h-12 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm font-medium text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
           />
-        </div>
+        </label>
       </div>
 
-      {/* Lista */}
-      {visibles.length === 0 ? (
-        <EmptyState tab={tab} />
-      ) : (
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visibles.map((r) => (
-            <ReservaCard key={r.reservaId} reserva={r} />
+      {filtered.length ? (
+        <div className="grid gap-5 xl:grid-cols-2">
+          {filtered.map((reserva) => (
+            <ReservaCard key={reserva.reservaId} reserva={reserva} />
           ))}
         </div>
+      ) : (
+        <div className="rounded-[28px] border border-dashed border-slate-300 bg-white p-10 text-center">
+          <h2 className="text-2xl font-black text-slate-950">No hay reservas aquí</h2>
+          <p className="mt-2 text-slate-600">Probá cambiar el filtro o buscar otro ID.</p>
+        </div>
       )}
-    </div>
-  );
-}
-
-function EmptyState({ tab }) {
-  const msg = {
-    proxima: "No tienes viajes próximos. ¡Explora destinos y reserva tu próxima aventura!",
-    pasada: "Aún no tienes viajes pasados.",
-    cancelada: "No tienes reservas canceladas.",
-  };
-  return (
-    <div className="mt-6 rounded-3xl border border-dashed border-slate-300 bg-white py-16 text-center">
-      <h2 className="text-lg font-semibold text-slate-900">Sin reservas</h2>
-      <p className="mt-2 text-sm text-slate-500">{msg[tab]}</p>
     </div>
   );
 }

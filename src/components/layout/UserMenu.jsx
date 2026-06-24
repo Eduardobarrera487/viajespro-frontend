@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { logoutAction } from "@/lib/auth/actions";
 
-/** Iniciales a partir del nombre. */
 function initials(name) {
   if (!name) return "?";
+
   return name
     .trim()
     .split(/\s+/)
@@ -15,26 +15,40 @@ function initials(name) {
     .join("");
 }
 
-/**
- * Menú de usuario con avatar y opciones (Mis reservas, Cerrar sesión).
- * El logout usa una Server Action que borra la cookie de sesión.
- *
- * @param {{ nombre: string }} props
- */
-export function UserMenu({ nombre }) {
+function isAdminUser(usuario) {
+  if (!usuario) return false;
+
+  const roleName = String(usuario.Rol ?? usuario.rol ?? usuario.role ?? usuario.Role ?? "")
+    .trim()
+    .toLowerCase();
+
+  if (["admin", "administrador", "administrator"].includes(roleName)) {
+    return true;
+  }
+
+  const rolId = Number(usuario.RolId ?? usuario.rolId ?? usuario.roleId);
+  return Number.isFinite(rolId) && rolId === 1;
+}
+
+export function UserMenu({ nombre, usuario }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
+  const admin = isAdminUser(usuario);
 
   useEffect(() => {
     if (!open) return;
+
     function onClick(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
     }
+
     function onKey(e) {
       if (e.key === "Escape") setOpen(false);
     }
+
     document.addEventListener("mousedown", onClick);
     document.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("mousedown", onClick);
       document.removeEventListener("keydown", onKey);
@@ -42,49 +56,74 @@ export function UserMenu({ nombre }) {
   }, [open]);
 
   return (
-    <div className="relative" ref={ref}>
+    <div ref={ref} className="relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2.5 rounded-full transition-colors hover:bg-slate-50"
+        className="flex items-center gap-2.5 rounded-full p-1.5 pr-2 transition-colors hover:bg-slate-50 sm:pr-3"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
           {initials(nombre)}
         </span>
-        <div className="hidden text-left leading-tight sm:block">
-          <p className="text-sm font-semibold text-slate-900">{nombre}</p>
-          <p className="text-xs text-slate-500">Mi cuenta</p>
-        </div>
-        <svg viewBox="0 0 24 24" className={`hidden h-4 w-4 text-slate-400 transition-transform sm:block ${open ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="m6 9 6 6 6-6" />
-        </svg>
+
+        <span className="hidden text-left leading-tight sm:block">
+          <span className="block max-w-40 truncate text-sm font-bold text-slate-950">{nombre}</span>
+          <span className="block text-xs text-slate-500">Mi cuenta</span>
+        </span>
+
+        <span className="text-slate-400">⌄</span>
       </button>
 
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 z-30 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white py-1.5 shadow-xl shadow-slate-900/10"
+          className="absolute right-0 mt-3 w-64 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
         >
-          <div className="border-b border-slate-100 px-4 py-2">
-            <p className="truncate text-sm font-semibold text-slate-900">{nombre}</p>
+          <div className="border-b border-slate-100 px-4 py-3">
+            <p className="truncate text-sm font-bold text-slate-950">{nombre}</p>
+            <p className="text-xs text-slate-500">{admin ? "Administrador" : "Usuario"}</p>
           </div>
 
           <Link
-            href="/reservas"
-            role="menuitem"
+            href="/perfil"
             onClick={() => setOpen(false)}
-            className="block px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+            className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            Mi perfil
+          </Link>
+
+          <Link
+            href="/reservas"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
           >
             Mis reservas
           </Link>
 
-          <form action={logoutAction}>
+          <Link
+            href="/likes"
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            Guardados
+          </Link>
+
+          {admin ? (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Panel admin
+            </Link>
+          ) : null}
+
+          <form action={logoutAction} className="border-t border-slate-100">
             <button
               type="submit"
-              role="menuitem"
-              className="block w-full px-4 py-2.5 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+              className="block w-full px-4 py-2.5 text-left text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
             >
               Cerrar sesión
             </button>
