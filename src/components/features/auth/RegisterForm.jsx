@@ -7,11 +7,12 @@ import { FormBanner } from "@/components/features/auth/FormBanner";
 import { registerAction } from "@/lib/auth/actions";
 import { initialAuthState } from "@/lib/auth/state";
 
-export function RegisterForm() {
+export function RegisterForm({ next }) {
   const [state, formAction, pending] = useActionState(registerAction, initialAuthState);
 
   return (
     <form action={formAction} className="flex flex-col gap-5" noValidate>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <FormBanner>{state.error}</FormBanner>
 
       <TextField

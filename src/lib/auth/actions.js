@@ -2,13 +2,27 @@
 
 import { redirect } from "next/navigation";
 import { apiFetch, ApiUnreachableError } from "@/lib/api/client";
-import { createSession } from "@/lib/auth/session";
+import { createSession, destroySession } from "@/lib/auth/session";
 import { loginSchema, registerSchema, forgotPasswordSchema } from "@/lib/validations";
 
 /**
  * Estado que consumen los formularios vía useActionState.
  * @typedef {import("@/lib/auth/state").AuthState} AuthState
  */
+
+/** Cierra la sesión (borra la cookie) y vuelve a la exploración pública. */
+export async function logoutAction() {
+  await destroySession();
+  redirect("/");
+}
+
+/** Valida que `next` sea una ruta interna segura (evita open-redirect). */
+function safeNext(value) {
+  if (typeof value === "string" && value.startsWith("/") && !value.startsWith("//")) {
+    return value;
+  }
+  return "/";
+}
 
 /** Extrae un mensaje legible de un cuerpo de error de la API (.NET). */
 function apiErrorMessage(data, fallback) {
@@ -68,7 +82,7 @@ export async function loginAction(_prevState, formData) {
   }
 
   // Éxito: fuera del try para que redirect() propague correctamente.
-  redirect("/");
+  redirect(safeNext(formData.get("next")));
 }
 
 /**
@@ -118,7 +132,7 @@ export async function registerAction(_prevState, formData) {
     return { error: networkOrGenericError(err), fieldErrors: {} };
   }
 
-  redirect("/");
+  redirect(safeNext(formData.get("next")));
 }
 
 /**

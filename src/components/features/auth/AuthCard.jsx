@@ -14,7 +14,7 @@ const TABS = [
  * Alterna entre los formularios de login y registro en el cliente,
  * sin navegar a otra ruta.
  */
-export function AuthCard() {
+export function AuthCard({ next }) {
   const [tab, setTab] = useState("login");
 
   return (
@@ -58,11 +58,11 @@ export function AuthCard() {
       <div className="mt-6">
         {tab === "login" ? (
           <div role="tabpanel" id="panel-login" aria-labelledby="tab-login">
-            <LoginForm />
+            <LoginForm next={next} />
           </div>
         ) : (
           <div role="tabpanel" id="panel-register" aria-labelledby="tab-register">
-            <RegisterForm />
+            <RegisterForm next={next} />
           </div>
         )}
       </div>
