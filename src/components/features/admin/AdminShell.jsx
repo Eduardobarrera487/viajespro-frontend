@@ -6,6 +6,7 @@ const LINKS = [
   ["/admin/roles", "Roles"],
   ["/admin/viajes", "Viajes"],
   ["/admin/reservas", "Reservas"],
+  ["/admin/certificaciones", "Certificaciones"],
   ["/admin/quejas", "Quejas"],
 ];
 

@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { crearReserva } from "@/lib/api/reservas";
+import { revalidatePath } from "next/cache";
+import { crearReserva, reagendarReserva, solicitarReembolso } from "@/lib/api/reservas";
 import { getSession } from "@/lib/auth/session";
 
 /** Mensaje legible desde un cuerpo de error de la API (texto plano o ModelState). */
@@ -86,4 +87,45 @@ export async function crearReservaAction(_prevState, formData) {
 
   // Éxito: a la confirmación con el id real (fuera del try para que redirect propague).
   redirect(`/viajes/${viajeId}/reservar/confirmacion?reserva=${reservaId}`);
+}
+
+/**
+ * Punto #3 — el cliente solicita el reembolso de una reserva pausada.
+ * @param {{ ok: boolean, error: string | null }} _prev
+ */
+export async function solicitarReembolsoAction(_prev, formData) {
+  const reservaId = Number(formData.get("reservaId"));
+  if (!reservaId) return { ok: false, error: "Reserva inválida." };
+
+  try {
+    const res = await solicitarReembolso(reservaId);
+    if (res.status === 401) redirect("/logout");
+    if (!res.ok) return { ok: false, error: apiErrorMessage(res.data, "No se pudo solicitar el reembolso.") };
+  } catch {
+    return { ok: false, error: "Ocurrió un error. Inténtalo de nuevo." };
+  }
+
+  revalidatePath("/reservas");
+  return { ok: true, error: null };
+}
+
+/**
+ * Punto #3 — el cliente reagenda una reserva pausada a otra fecha.
+ * @param {{ ok: boolean, error: string | null }} _prev
+ */
+export async function reagendarReservaAction(_prev, formData) {
+  const reservaId = Number(formData.get("reservaId"));
+  const nuevaDisponibilidadId = Number(formData.get("nuevaDisponibilidadId"));
+  if (!reservaId || !nuevaDisponibilidadId) return { ok: false, error: "Selecciona una nueva fecha." };
+
+  try {
+    const res = await reagendarReserva(reservaId, nuevaDisponibilidadId);
+    if (res.status === 401) redirect("/logout");
+    if (!res.ok) return { ok: false, error: apiErrorMessage(res.data, "No se pudo reagendar la reserva.") };
+  } catch {
+    return { ok: false, error: "Ocurrió un error. Inténtalo de nuevo." };
+  }
+
+  revalidatePath("/reservas");
+  return { ok: true, error: null };
 }

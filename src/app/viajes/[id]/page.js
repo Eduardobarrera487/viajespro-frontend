@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Gallery } from "@/components/features/viajes/Gallery";
 import { BookingCard } from "@/components/features/viajes/BookingCard";
+import { TripInclusions } from "@/components/features/viajes/TripInclusions";
 import {
   MapPinIcon,
   ShareIcon,
@@ -14,11 +15,6 @@ import {
   ChevronRightIcon,
   CheckIcon,
   InfoIcon,
-  PlaneIcon,
-  BedIcon,
-  CoffeeIcon,
-  CarIcon,
-  SailboatIcon,
 } from "@/components/features/viajes/icons";
 
 export const metadata = {
@@ -41,6 +37,19 @@ export default async function ViajeDetailPage({ params }) {
   const disponibilidades = viaje.disponibilidades ?? [];
   const primera = disponibilidades.find((d) => d.activo) ?? disponibilidades[0];
   const noches = primera ? nightsBetween(primera.fecha, primera.fechaRetorno) : null;
+
+  // Datos del punto #2 (¿qué incluye? / itinerario). Lectura tolerante camelCase/PascalCase;
+  // vienen del API cuando el backend los exponga, si no TripInclusions usa fallback.
+  const inclusiones = viaje.inclusiones ?? viaje.Inclusiones ?? [];
+  const itinerario = viaje.itinerario ?? viaje.Itinerario ?? [];
+  const hotelNombre = viaje.nombreHotel ?? viaje.NombreHotel ?? viaje.hotel?.nombre ?? viaje.Hotel?.Nombre;
+  const hotel = hotelNombre
+    ? {
+        nombre: hotelNombre,
+        categoria: viaje.categoriaHotel ?? viaje.CategoriaHotel ?? viaje.hotel?.categoria,
+        regimen: viaje.regimenComidas ?? viaje.RegimenComidas ?? viaje.hotel?.regimen,
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
@@ -113,36 +122,13 @@ export default async function ViajeDetailPage({ params }) {
               </p>
             </section>
 
-            {/* ¿Qué está incluido? — plantilla (el API no modela inclusiones) */}
-            <section className="rounded-3xl bg-white p-6 shadow-card sm:p-8">
-              <h2 className="text-lg font-bold text-slate-950">¿Qué está incluido?</h2>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <Incluido icon={PlaneIcon} titulo="Vuelos ida y vuelta" detalle="Desde tu ciudad de origen" />
-                <Incluido
-                  icon={BedIcon}
-                  titulo={noches ? `${noches} noches de hotel` : "Alojamiento"}
-                  detalle="Habitación con servicios"
-                />
-                <Incluido icon={CoffeeIcon} titulo="Desayunos incluidos" detalle="Buffet diario en el hotel" />
-                <Incluido icon={CarIcon} titulo="Traslados privados" detalle="Aeropuerto · Hotel · Aeropuerto" />
-                <Incluido icon={SailboatIcon} titulo="Excursión guiada" detalle="Actividad seleccionada del destino" />
-              </div>
-            </section>
-
-            {/* Itinerario — plantilla genérica derivada de la duración */}
-            <section className="rounded-3xl bg-white p-6 shadow-card sm:p-8">
-              <h2 className="text-lg font-bold text-slate-950">Itinerario del viaje</h2>
-              <ol className="mt-6 space-y-6">
-                <Paso n={1} titulo="Llegada y bienvenida" detalle="Recepción, traslado al alojamiento y tarde libre para una primera toma de contacto con el destino." />
-                <Paso n={2} titulo="Actividad principal" detalle="Jornada con la excursión guiada incluida y tiempo para descubrir los puntos más emblemáticos." />
-                <Paso
-                  n={noches && noches > 1 ? noches + 1 : 3}
-                  titulo="Día libre y salida"
-                  detalle="Mañana libre para últimas compras o relax y traslado de regreso según tu vuelo."
-                  ultimo
-                />
-              </ol>
-            </section>
+            {/* ¿Qué está incluido? (desplegable) + Itinerario — datos reales del API con fallback */}
+            <TripInclusions
+              inclusiones={inclusiones}
+              itinerario={itinerario}
+              hotel={hotel}
+              noches={noches}
+            />
 
             {/* Políticas — plantilla (términos generales) */}
             <section className="rounded-3xl bg-white p-6 shadow-card sm:p-8">
@@ -179,38 +165,5 @@ export default async function ViajeDetailPage({ params }) {
 
       <SiteFooter />
     </div>
-  );
-}
-
-/** Ítem de la sección "¿Qué está incluido?". */
-function Incluido({ icon: Icon, titulo, detalle }) {
-  return (
-    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-        <Icon className="h-5 w-5" />
-      </span>
-      <div>
-        <p className="text-sm font-semibold text-slate-900">{titulo}</p>
-        <p className="text-xs text-slate-500">{detalle}</p>
-      </div>
-    </div>
-  );
-}
-
-/** Paso del itinerario. */
-function Paso({ n, titulo, detalle, ultimo = false }) {
-  return (
-    <li className="relative flex gap-4">
-      <div className="flex flex-col items-center">
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-          {n}
-        </span>
-        {!ultimo ? <span className="mt-1 w-px flex-1 bg-slate-200" /> : null}
-      </div>
-      <div className="pb-1">
-        <p className="text-sm font-semibold text-slate-900">{titulo}</p>
-        <p className="mt-1 text-sm leading-6 text-slate-500">{detalle}</p>
-      </div>
-    </li>
   );
 }

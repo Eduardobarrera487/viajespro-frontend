@@ -75,10 +75,21 @@ function normalizeReserva(raw, likedIds, hoy) {
     cantidadPersonas,
     total,
     liked: viajeId ? likedIds.has(Number(viajeId)) : false,
+    // Punto #3: la reserva está "pausada" si el viaje se pausó o su estado lo indica.
+    pausada:
+      String(pick(viaje?.estadoPublicacion, viaje?.EstadoPublicacion, "") || "").toLowerCase() === "pausado" ||
+      String(pick(raw.estado, raw.Estado, raw.estadoReserva?.nombre, raw.EstadoReserva?.Nombre, "") || "")
+        .toLowerCase() === "pausada" ||
+      Boolean(pick(raw.pausada, raw.Pausada)),
   };
 }
 
-export default async function ReservasPage() {
+export default async function ReservasPage({ searchParams }) {
+  // DEMO temporal (punto #3): /reservas?preview=pausada marca las reservas como pausadas
+  // para previsualizar el banner sin que el backend lo soporte todavía. Quitar luego.
+  const sp = await searchParams;
+  const previewPausada = sp?.preview === "pausada";
+
   const session = await getSession();
   if (!session?.token) redirect("/auth");
 
@@ -98,7 +109,8 @@ export default async function ReservasPage() {
 
   const reservas = (Array.isArray(reservasRes.data) ? reservasRes.data : [])
     .map((reserva) => normalizeReserva(reserva, likedIds, hoy))
-    .filter((reserva) => reserva.reservaId);
+    .filter((reserva) => reserva.reservaId)
+    .map((reserva) => (previewPausada ? { ...reserva, pausada: true } : reserva));
 
   return (
     <>

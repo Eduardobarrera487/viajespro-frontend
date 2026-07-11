@@ -1,16 +1,18 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { PublicarViajeForm } from "@/components/features/vendedor/PublicarViajeForm";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getCatalogosPublicacion } from "@/lib/api/publicaciones";
+import { estadoCertificacion } from "@/lib/api/agentes";
 import { getSession } from "@/lib/auth/session";
 
 export const metadata = {
   title: "Publicar viaje · ViajesPro",
 };
 
-export default async function PublicarViajePage() {
+export default async function PublicarViajePage({ searchParams }) {
   const session = await getSession();
   if (!session?.token) redirect("/auth");
 
@@ -22,6 +24,19 @@ export default async function PublicarViajePage() {
     : Array.isArray(catalogosRes.data?.Tipos)
       ? catalogosRes.data.Tipos
       : [];
+
+  // Punto #1: solo un agente certificado puede publicar.
+  //  - Si el módulo de certificación existe (disponible) y NO está aprobado → bloquear el form.
+  //  - Si el módulo aún no existe (backend no listo) → permitir (degradado).
+  //  - Demo: ?preview=nocert (bloqueado) | ?preview=cert (permitido).
+  const sp = await searchParams;
+  const { disponible, estado } = await estadoCertificacion();
+  const certificado =
+    sp?.preview === "nocert"
+      ? false
+      : sp?.preview === "cert"
+        ? true
+        : !disponible || estado === "aprobada";
 
   return (
     <>
@@ -37,10 +52,33 @@ export default async function PublicarViajePage() {
               <p className="mt-3 max-w-2xl text-lg text-slate-600">
                 Crea un destino vendible, configura precio, cupos, fecha de salida e imagen comercial.
               </p>
+              <Link
+                href="/vendedor/certificacion"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-700"
+              >
+                ¿Eres agente? Gestiona tu certificación →
+              </Link>
             </div>
           </div>
 
-          <PublicarViajeForm tipos={tipos} />
+          {certificado ? (
+            <PublicarViajeForm tipos={tipos} />
+          ) : (
+            <div className="rounded-[32px] border border-amber-200 bg-amber-50 p-8 text-center md:p-12">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl">🔒</div>
+              <h2 className="mt-5 text-2xl font-black text-slate-950">Necesitas ser agente certificado</h2>
+              <p className="mx-auto mt-2 max-w-md text-slate-600">
+                Para publicar viajes primero debes enviar tus datos legales (cédula y licencia) y que un
+                administrador apruebe tu certificación.
+              </p>
+              <Link
+                href="/vendedor/certificacion"
+                className="mt-6 inline-flex rounded-2xl bg-amber-600 px-6 py-3 font-bold text-white transition hover:bg-amber-700"
+              >
+                Solicitar certificación
+              </Link>
+            </div>
+          )}
         </section>
       </main>
       <SiteFooter />

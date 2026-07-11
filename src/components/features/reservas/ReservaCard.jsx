@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { ReservaCardActions } from "@/components/features/reservas/ReservaCardActions";
+import { ReservaPausadaBanner } from "@/components/features/reservas/ReservaPausadaBanner";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 function estadoTone(estado) {
@@ -21,6 +22,10 @@ export function ReservaCard({ reserva }) {
   return (
     <article className="group overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70">
       <div className="p-5 sm:p-6">
+        {reserva.pausada ? (
+          <ReservaPausadaBanner reservaId={reserva.reservaId} viajeId={reserva.viajeId} />
+        ) : null}
+
         <div className="flex items-start justify-between gap-4">
           <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black ring-1 ${estadoTone(reserva.estado)}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-current" />

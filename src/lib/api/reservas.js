@@ -50,3 +50,28 @@ export async function getReserva(reservaId) {
   if (!session?.token) return { ok: false, status: 401, data: null };
   return apiFetch(`/api/Reservas/${reservaId}`, { token: session.token });
 }
+
+/* ------------------------------------------------------------------ */
+/* Punto #3 — reserva pausada. AJUSTAR rutas/DTO cuando exista el backend. */
+/* ------------------------------------------------------------------ */
+
+/** Reagenda una reserva a otra disponibilidad: POST /api/Reservas/{id}/reagendar. */
+export async function reagendarReserva(reservaId, nuevaDisponibilidadId) {
+  const session = await getSession();
+  if (!session?.token) return { ok: false, status: 401, data: null };
+  return apiFetch(`/api/Reservas/${Number(reservaId)}/reagendar`, {
+    method: "POST",
+    body: { nuevaDisponibilidadId: Number(nuevaDisponibilidadId) },
+    token: session.token,
+  });
+}
+
+/** Solicita el reembolso de una reserva: POST /api/Reservas/{id}/reembolso. */
+export async function solicitarReembolso(reservaId) {
+  const session = await getSession();
+  if (!session?.token) return { ok: false, status: 401, data: null };
+  return apiFetch(`/api/Reservas/${Number(reservaId)}/reembolso`, {
+    method: "POST",
+    token: session.token,
+  });
+}
