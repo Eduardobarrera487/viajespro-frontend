@@ -91,6 +91,14 @@ Ver contrato completo en `docs/plan-feedback-profesor.md`.
   **estable** (picsum sembrado por `viajeId`) solo si el viaje no tiene `imagenUrl`. El **detalle**
   (`Gallery`) y el checkout usan un placeholder neutro (✈) cuando no hay imagen.
 - **Vercel**: las env NO salen de `.env.local` (gitignored) → configurarlas en el dashboard de Vercel.
+- **NO usar `vercel.json` con rewrites de SPA**: había un `vercel.json` con `"/(.*)" → "/index.html"`
+  (config de SPA estática) que **rompía TODO el ruteo de Next** en Vercel (rutas dinámicas como
+  `/viajes/[id]` daban 404) y además interceptaba `/api/imagen`. Se **borró**: Next.js en Vercel
+  no necesita config, Vercel lo detecta solo. Si algún día hacen falta rewrites, usar
+  `async rewrites()` en `next.config.mjs`, no un `vercel.json` de SPA.
+- **Backend en somee está DESACTUALIZADO** (viejo): `GET /api/Agentes/*` responde 404. Por eso en
+  Vercel los features nuevos (certificación, reembolsos, inclusiones, etc.) no funcionan hasta que
+  se despliegue el API actualizado (`ReservasViajesAPI.NET-main`) a somee. En local sí funcionan.
 - **`?preview=` flags** siguen en el código (demo sin backend): `/reservas?preview=pausada`,
   `/admin/certificaciones?preview=1`, `/vendedor/certificacion?preview=...`,
   `/vendedor/publicar?preview=nocert|cert`. Ya no se necesitan con el backend real; se pueden quitar.
