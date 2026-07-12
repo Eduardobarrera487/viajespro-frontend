@@ -2,6 +2,7 @@ import "server-only";
 
 import { apiFetch } from "@/lib/api/client";
 import { getSession } from "@/lib/auth/session";
+import { toProxyImage } from "@/lib/img";
 
 /**
  * Punto #1 — certificación de agentes de viaje.
@@ -27,14 +28,6 @@ export async function solicitarCertificacion(formData) {
   });
 }
 
-/** Vuelve absoluta una URL relativa (los documentos vienen como /uploads/...). */
-function toAbsolute(url) {
-  if (!url) return url ?? null;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.API_BASE_URL ?? "").replace(/\/+$/, "");
-  return `${base}${String(url).startsWith("/") ? "" : "/"}${url}`;
-}
-
 /** (Admin) Lista solicitudes de certificación. */
 export async function getCertificaciones(estado) {
   const session = await getSession();
@@ -43,8 +36,8 @@ export async function getCertificaciones(estado) {
   const res = await apiFetch(`/api/Agentes/certificaciones${qs}`, { token: session.token });
   if (res.ok && Array.isArray(res.data)) {
     for (const c of res.data) {
-      c.documentoCedulaUrl = toAbsolute(c.documentoCedulaUrl ?? c.DocumentoCedulaUrl);
-      c.documentoLicenciaUrl = toAbsolute(c.documentoLicenciaUrl ?? c.DocumentoLicenciaUrl);
+      c.documentoCedulaUrl = toProxyImage(c.documentoCedulaUrl ?? c.DocumentoCedulaUrl);
+      c.documentoLicenciaUrl = toProxyImage(c.documentoLicenciaUrl ?? c.DocumentoLicenciaUrl);
     }
   }
   return res;

@@ -1,6 +1,17 @@
 import "server-only";
 
 import { getSession } from "@/lib/auth/session";
+import { toProxyImage } from "@/lib/img";
+
+/** Normaliza `imagenUrl` de cada viaje al proxy del front. */
+function normalizarImagenes(res) {
+  if (res?.ok && Array.isArray(res.data)) {
+    for (const v of res.data) {
+      if (v && typeof v === "object") v.imagenUrl = toProxyImage(v.imagenUrl ?? v.ImagenUrl);
+    }
+  }
+  return res;
+}
 
 function getConfig() {
   const baseUrl = process.env.API_BASE_URL;
@@ -72,16 +83,18 @@ export async function crearPublicacionViaje(formData) {
 
 export async function getMisPublicaciones() {
   const session = await getSession();
-  return apiRequest("/api/PublicacionesViajes/mis-viajes", {
+  const res = await apiRequest("/api/PublicacionesViajes/mis-viajes", {
     token: session?.token,
   });
+  return normalizarImagenes(res);
 }
 
 export async function getPublicacionesAdmin() {
   const session = await getSession();
-  return apiRequest("/api/PublicacionesViajes/admin", {
+  const res = await apiRequest("/api/PublicacionesViajes/admin", {
     token: session?.token,
   });
+  return normalizarImagenes(res);
 }
 
 export async function cambiarEstadoPublicacion(viajeId, activo, motivo) {

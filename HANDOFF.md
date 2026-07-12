@@ -79,10 +79,14 @@ Ver contrato completo en `docs/plan-feedback-profesor.md`.
   siempre mandar un body (aunque sea `{}`), si no → **415**. (Ya pasó con el reembolso.)
 - **No se puede editar una disponibilidad de un viaje inactivo** (backend). Por eso "reprogramar"
   primero reactiva y luego cambia la fecha.
-- **Imágenes al desplegar**: (a) si el front va en HTTPS y las imágenes en HTTP → mixed content
-  (navegador las bloquea) → API debe estar en HTTPS; (b) los uploads viven en el filesystem del
-  servidor → una imagen subida en local no está en el servidor desplegado (somee free puede no
-  persistir uploads).
+- **Imágenes/documentos = proxy** (`/api/imagen?path=/uploads/...`, `src/lib/img.js` + `src/app/api/imagen/route.js`):
+  como somee es **HTTP-only** y Vercel es HTTPS, `<img src="http://...">` se bloquearía por mixed content.
+  Por eso las URLs de imágenes/documentos (`getViaje/getViajes`, `getMisPublicaciones/getPublicacionesAdmin`,
+  `getCertificaciones`) se reescriben al proxy, que las trae server-side (HTTP ok) y las sirve por HTTPS.
+  El middleware deja pasar `/api/imagen` sin sesión.
+- **Uploads = filesystem del servidor**: una imagen subida en local **no está** en somee (y viceversa);
+  la BD es compartida pero los archivos no. somee free puede no persistir uploads entre reinicios.
+  Fix de fondo (backend): almacenamiento en la nube (Cloudinary/S3) en vez del filesystem.
 - **Viaje sin imagen**: las tarjetas de **exploración** (`ViajeCard`) usan una imagen aleatoria
   **estable** (picsum sembrado por `viajeId`) solo si el viaje no tiene `imagenUrl`. El **detalle**
   (`Gallery`) y el checkout usan un placeholder neutro (✈) cuando no hay imagen.

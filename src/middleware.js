@@ -42,6 +42,12 @@ function hasAdminRole(usuario) {
 
 export function middleware(request) {
   const { pathname, search } = request.nextUrl;
+
+  // El proxy de imágenes debe cargar sin sesión (sirve archivos /uploads del API).
+  if (pathname === "/api/imagen") {
+    return NextResponse.next();
+  }
+
   const rawSession = request.cookies.get(SESSION_COOKIE)?.value;
   const hasSession = Boolean(rawSession);
   const isAuthRoute = pathname === "/auth" || pathname.startsWith("/auth/");

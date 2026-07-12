@@ -2,24 +2,13 @@ import "server-only";
 
 import { apiFetch } from "@/lib/api/client";
 import { getSession } from "@/lib/auth/session";
+import { toProxyImage } from "@/lib/img";
 
-/**
- * Convierte una URL de imagen relativa (p.ej. `/uploads/viajes/x.jpg`) en absoluta
- * usando API_BASE_URL. `GET /api/Viajes[...]` devuelve la ruta relativa (stub del
- * backend `ToAbsoluteImageUrl`), y el navegador la resolvería contra el front.
- */
-function toAbsoluteImagen(url) {
-  if (!url) return url ?? null;
-  if (/^https?:\/\//i.test(url)) return url;
-  const base = (process.env.API_BASE_URL ?? "").replace(/\/+$/, "");
-  return `${base}${String(url).startsWith("/") ? "" : "/"}${url}`;
-}
-
-/** Normaliza `imagenUrl` de un viaje a URL absoluta (mutación in-place). */
+/** Normaliza `imagenUrl` de un viaje al proxy del front (mutación in-place). */
 function normalizarImagen(viaje) {
   if (viaje && typeof viaje === "object") {
     const raw = viaje.imagenUrl ?? viaje.ImagenUrl;
-    viaje.imagenUrl = toAbsoluteImagen(raw);
+    viaje.imagenUrl = toProxyImage(raw);
   }
   return viaje;
 }
