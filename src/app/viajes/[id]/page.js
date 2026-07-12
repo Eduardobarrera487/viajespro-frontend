@@ -107,7 +107,7 @@ export default async function ViajeDetailPage({ params }) {
 
         {/* Galería */}
         <div className="mt-6">
-          <Gallery viajeId={viaje.viajeId} titulo={viaje.titulo} />
+          <Gallery imagenUrl={viaje.imagenUrl ?? viaje.ImagenUrl} titulo={viaje.titulo} />
         </div>
 
         {/* Contenido + reserva */}

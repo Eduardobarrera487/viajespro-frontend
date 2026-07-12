@@ -32,9 +32,15 @@ const BASE_LINKS = [
   {
     href: "/vendedor/publicar",
     label: "Vender viajes",
-    isActive: (p) => p.startsWith("/vendedor"),
+    isActive: (p) => p === "/vendedor/publicar" || p.startsWith("/vendedor/certificacion"),
   },
 ];
+
+const MIS_VIAJES_LINK = {
+  href: "/vendedor/mis-viajes",
+  label: "Mis viajes",
+  isActive: (p) => p.startsWith("/vendedor/mis-viajes"),
+};
 
 const ADMIN_LINK = {
   href: "/admin",
@@ -42,9 +48,11 @@ const ADMIN_LINK = {
   isActive: (p) => p.startsWith("/admin"),
 };
 
-export function MainNav({ usuario }) {
+export function MainNav({ usuario, esVendedor = false }) {
   const pathname = usePathname();
-  const links = isAdminUser(usuario) ? [...BASE_LINKS, ADMIN_LINK] : BASE_LINKS;
+  const links = [...BASE_LINKS];
+  if (esVendedor) links.push(MIS_VIAJES_LINK);
+  if (isAdminUser(usuario)) links.push(ADMIN_LINK);
 
   return (
     <nav className="hidden items-center gap-2 lg:flex" aria-label="Navegación principal">

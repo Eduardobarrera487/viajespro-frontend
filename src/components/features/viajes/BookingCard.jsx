@@ -150,10 +150,12 @@ export function BookingCard({ viajeId, precio, disponibilidades }) {
           </dt>
           <dd className="font-medium text-slate-900">{formatCurrency(subtotal)}</dd>
         </div>
-        <div className="flex justify-between text-slate-600">
-          <dt>Impuestos y tasas (est.)</dt>
-          <dd className="font-medium text-slate-900">{formatCurrency(impuestos)}</dd>
-        </div>
+        {impuestos > 0 ? (
+          <div className="flex justify-between text-slate-600">
+            <dt>Impuestos y tasas</dt>
+            <dd className="font-medium text-slate-900">{formatCurrency(impuestos)}</dd>
+          </div>
+        ) : null}
         <div className="mt-2 flex justify-between border-t border-slate-200 pt-3 text-base">
           <dt className="font-semibold text-slate-950">Total</dt>
           <dd className="font-bold text-slate-950">{formatCurrency(total)}</dd>

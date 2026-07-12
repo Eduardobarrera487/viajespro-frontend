@@ -73,12 +73,7 @@ export default async function ConfirmacionPage({ searchParams }) {
 
           <div className="mt-6 rounded-3xl bg-white p-6 shadow-card sm:p-8">
             <div className="flex items-center gap-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`https://picsum.photos/seed/viaje-${viajeId ?? reserva.reservaId}-1/160/160`}
-                alt={titulo}
-                className="h-16 w-16 rounded-2xl object-cover"
-              />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-2xl text-slate-300">✈</div>
               <p className="font-semibold text-slate-950">{titulo}</p>
             </div>
 

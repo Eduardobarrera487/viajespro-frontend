@@ -1,9 +1,8 @@
 /**
  * Cálculo de precios de una reserva (puro — válido en cliente y servidor).
- * El API no expone impuestos; usamos una estimación transparente.
+ * El backend NO cobra impuestos: el total real de la reserva es precio × viajeros.
+ * No inventamos ningún cargo extra para que el total coincida con la BD.
  */
-
-export const TAX_RATE = 0.07;
 
 /**
  * @param {number} precio - Precio por persona.
@@ -12,7 +11,5 @@ export const TAX_RATE = 0.07;
  */
 export function computeTotals(precio, viajeros) {
   const subtotal = (Number(precio) || 0) * (Number(viajeros) || 0);
-  const impuestos = Math.round(subtotal * TAX_RATE);
-  const seguro = 0;
-  return { subtotal, impuestos, seguro, total: subtotal + impuestos + seguro };
+  return { subtotal, impuestos: 0, seguro: 0, total: subtotal };
 }

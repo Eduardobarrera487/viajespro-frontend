@@ -44,11 +44,13 @@ export function PublicarViajeForm({ tipos = [] }) {
   const setInclusion = updateRow(setInclusiones);
   const setItinerarioRow = updateRow(setItinerario);
 
-  // Solo se envían filas con contenido.
-  const inclusionesPayload = inclusiones.filter((r) => r.titulo.trim() || r.detalle.trim());
+  // El backend exige tipo+título en inclusiones y día+título en itinerario.
+  const inclusionesPayload = inclusiones
+    .filter((r) => r.titulo.trim())
+    .map((r, i) => ({ tipo: r.tipo, titulo: r.titulo.trim(), detalle: r.detalle.trim(), orden: i }));
   const itinerarioPayload = itinerario
-    .filter((r) => r.titulo.trim() || r.sitios.trim() || r.descripcion.trim())
-    .map((r, i) => ({ dia: i + 1, ...r }));
+    .filter((r) => r.titulo.trim())
+    .map((r, i) => ({ dia: i + 1, titulo: r.titulo.trim(), sitios: r.sitios.trim(), descripcion: r.descripcion.trim(), orden: i }));
 
   return (
     <form action={formAction} className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
@@ -217,47 +219,13 @@ export function PublicarViajeForm({ tipos = [] }) {
         </label>
       </div>
 
-      {/* Punto #2: hotel, inclusiones e itinerario (para el "¿Qué está incluido?" del detalle) */}
+      {/* Punto #2: inclusiones e itinerario (para el "¿Qué está incluido?" del detalle) */}
       <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50/60 p-5 md:p-6">
         <h2 className="text-lg font-black text-slate-950">¿Qué incluye el viaje?</h2>
-        <p className="mt-1 text-sm text-slate-500">Esto se mostrará desplegable en el detalle del viaje.</p>
-
-        {/* Hotel y comidas */}
-        <div className="mt-5 grid gap-5 md:grid-cols-3">
-          <label className="md:col-span-1">
-            <span className="text-sm font-semibold text-slate-700">Hotel</span>
-            <input
-              name="NombreHotel"
-              type="text"
-              maxLength={200}
-              placeholder="Ej. Hotel Riu Palace"
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-          <label>
-            <span className="text-sm font-semibold text-slate-700">Categoría</span>
-            <select
-              name="CategoriaHotel"
-              defaultValue=""
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            >
-              <option value="">—</option>
-              {[3, 4, 5].map((n) => (
-                <option key={n} value={n}>{n} estrellas</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span className="text-sm font-semibold text-slate-700">Régimen de comidas</span>
-            <input
-              name="RegimenComidas"
-              type="text"
-              maxLength={100}
-              placeholder="Ej. Desayuno buffet"
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-            />
-          </label>
-        </div>
+        <p className="mt-1 text-sm text-slate-500">
+          Se mostrará desplegable en el detalle. Agrega el hotel, desayunos, vuelos, etc. como inclusiones
+          (elige el tipo en cada fila).
+        </p>
 
         {/* Inclusiones */}
         <div className="mt-6">
@@ -336,9 +304,9 @@ export function PublicarViajeForm({ tipos = [] }) {
           </div>
         </div>
 
-        {/* Payload al API (el backend lo aceptará cuando exista el contrato del punto #2) */}
-        <input type="hidden" name="Inclusiones" value={JSON.stringify(inclusionesPayload)} />
-        <input type="hidden" name="Itinerario" value={JSON.stringify(itinerarioPayload)} />
+        {/* Payload al API — nombres exactos del DTO CrearPublicacionViajeDto */}
+        <input type="hidden" name="InclusionesJson" value={JSON.stringify(inclusionesPayload)} />
+        <input type="hidden" name="ItinerarioJson" value={JSON.stringify(itinerarioPayload)} />
       </div>
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

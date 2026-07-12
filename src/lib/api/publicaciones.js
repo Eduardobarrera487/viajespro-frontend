@@ -84,12 +84,13 @@ export async function getPublicacionesAdmin() {
   });
 }
 
-export async function cambiarEstadoPublicacion(viajeId, activo) {
+export async function cambiarEstadoPublicacion(viajeId, activo, motivo) {
   const session = await getSession();
   return apiRequest(`/api/PublicacionesViajes/${viajeId}/estado`, {
     method: "PUT",
     token: session?.token,
     json: true,
-    body: { activo },
+    // El backend exige `motivo` al pausar (activo=false).
+    body: { activo, motivo },
   });
 }

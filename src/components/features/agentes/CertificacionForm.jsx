@@ -57,13 +57,13 @@ export function CertificacionForm() {
 
         <label>
           <span className="text-sm font-semibold text-slate-700">Documento de cédula</span>
-          <input name="DocumentoCedula" type="file" accept="image/*,application/pdf"
+          <input name="DocumentoCedula" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required
             className="mt-2 w-full rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-semibold file:text-white" />
         </label>
 
         <label>
           <span className="text-sm font-semibold text-slate-700">Documento de licencia</span>
-          <input name="DocumentoLicencia" type="file" accept="image/*,application/pdf"
+          <input name="DocumentoLicencia" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" required
             className="mt-2 w-full rounded-2xl border border-dashed border-slate-300 px-4 py-3 text-sm outline-none transition file:mr-4 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-semibold file:text-white" />
         </label>
       </div>

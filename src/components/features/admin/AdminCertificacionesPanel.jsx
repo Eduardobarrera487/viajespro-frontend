@@ -33,7 +33,7 @@ export function AdminCertificacionesPanel({ certificaciones = [] }) {
   return (
     <div className="grid gap-5 xl:grid-cols-2">
       {certificaciones.map((c, i) => {
-        const id = pick(c.certificacionId, c.CertificacionId, c.id, i);
+        const id = pick(c.agenteCertificacionId, c.AgenteCertificacionId, c.certificacionId, c.CertificacionId, c.id, i);
         const estado = pick(c.estado, c.Estado, "Pendiente");
         const nombreLegal = pick(c.nombreLegal, c.NombreLegal, c.razonSocial, c.RazonSocial, "—");
         const usuario = pick(c.usuario?.nombre, c.Usuario?.Nombre, c.usuarioNombre, c.UsuarioNombre, "—");

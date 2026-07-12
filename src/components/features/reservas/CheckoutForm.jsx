@@ -76,9 +76,13 @@ export function CheckoutForm({
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-[220px_auto] sm:items-center">
-              <div className="overflow-hidden rounded-3xl bg-slate-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imageUrl} alt={titulo} className="h-44 w-full object-cover" />
+              <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 to-slate-100">
+                {imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={imageUrl} alt={titulo} className="h-44 w-full object-cover" />
+                ) : (
+                  <div className="flex h-44 w-full items-center justify-center text-4xl text-slate-300">✈</div>
+                )}
               </div>
               <div className="space-y-4">
                 <div>
@@ -178,8 +182,12 @@ export function CheckoutForm({
             <p className="text-lg font-semibold text-slate-950">Resumen de reserva</p>
 
             <div className="mt-6 flex items-center gap-4 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={imageUrl} alt={titulo} className="h-14 w-14 rounded-2xl object-cover" />
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imageUrl} alt={titulo} className="h-14 w-14 rounded-2xl object-cover" />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-xl text-slate-300">✈</div>
+              )}
               <div>
                 <p className="font-semibold text-slate-950">{titulo}</p>
                 <p className="text-sm text-slate-500">{tipoNombre}</p>
@@ -191,10 +199,12 @@ export function CheckoutForm({
                 <dt>Viaje ({viajeros} {viajeros === 1 ? "adulto" : "adultos"})</dt>
                 <dd className="font-semibold text-slate-950">{formatCurrency(subtotal)}</dd>
               </div>
-              <div className="flex items-center justify-between">
-                <dt>Impuestos y tasas</dt>
-                <dd className="font-semibold text-slate-950">{formatCurrency(impuestos)}</dd>
-              </div>
+              {impuestos > 0 ? (
+                <div className="flex items-center justify-between">
+                  <dt>Impuestos y tasas</dt>
+                  <dd className="font-semibold text-slate-950">{formatCurrency(impuestos)}</dd>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between">
                 <dt>Seguro de viaje (opcional)</dt>
                 <dd className="font-semibold text-slate-950">{formatCurrency(seguro)}</dd>

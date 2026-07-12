@@ -27,12 +27,27 @@ export async function solicitarCertificacion(formData) {
   });
 }
 
+/** Vuelve absoluta una URL relativa (los documentos vienen como /uploads/...). */
+function toAbsolute(url) {
+  if (!url) return url ?? null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = (process.env.API_BASE_URL ?? "").replace(/\/+$/, "");
+  return `${base}${String(url).startsWith("/") ? "" : "/"}${url}`;
+}
+
 /** (Admin) Lista solicitudes de certificación. */
 export async function getCertificaciones(estado) {
   const session = await getSession();
   if (!session?.token) return { ok: false, status: 401, data: null };
   const qs = estado ? `?estado=${encodeURIComponent(estado)}` : "";
-  return apiFetch(`/api/Agentes/certificaciones${qs}`, { token: session.token });
+  const res = await apiFetch(`/api/Agentes/certificaciones${qs}`, { token: session.token });
+  if (res.ok && Array.isArray(res.data)) {
+    for (const c of res.data) {
+      c.documentoCedulaUrl = toAbsolute(c.documentoCedulaUrl ?? c.DocumentoCedulaUrl);
+      c.documentoLicenciaUrl = toAbsolute(c.documentoLicenciaUrl ?? c.DocumentoLicenciaUrl);
+    }
+  }
+  return res;
 }
 
 /** (Admin) Aprueba o rechaza una certificación. */
@@ -41,7 +56,7 @@ export async function revisarCertificacion(certificacionId, { estado, motivo } =
   if (!session?.token) return { ok: false, status: 401, data: null };
   return apiFetch(`/api/Agentes/certificaciones/${Number(certificacionId)}/estado`, {
     method: "PUT",
-    body: { estado, motivo },
+    body: { Estado: estado, MotivoRechazo: motivo }, // nombres exactos del DTO
     token: session.token,
   });
 }
@@ -56,9 +71,12 @@ export async function estadoCertificacion() {
   try {
     const res = await getMiCertificacion();
     if (res.status === 404 || !res.ok) return { disponible: false, estado: null, motivo: null };
+    // Respuesta real: { tieneSolicitud, certificado, certificacion: { estado, motivoRechazo } | null }
     const d = res.data ?? {};
-    const estado = String(d.estado ?? d.Estado ?? "").toLowerCase();
-    const motivo = d.motivoRechazo ?? d.MotivoRechazo ?? d.motivo ?? d.Motivo ?? null;
+    const cert = d.certificacion ?? d.Certificacion ?? null;
+    const certificado = d.certificado ?? d.Certificado ?? false;
+    const estado = certificado ? "aprobada" : String(cert?.estado ?? cert?.Estado ?? "").toLowerCase();
+    const motivo = cert?.motivoRechazo ?? cert?.MotivoRechazo ?? null;
     return { disponible: true, estado, motivo };
   } catch {
     // API caída o módulo inexistente → no exigir certificación (degradado).

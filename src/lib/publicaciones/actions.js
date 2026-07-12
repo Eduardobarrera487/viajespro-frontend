@@ -7,6 +7,7 @@ import {
   cambiarEstadoPublicacion,
   crearPublicacionViaje,
 } from "@/lib/api/publicaciones";
+import { actualizarDisponibilidad } from "@/lib/api/disponibilidades";
 import { getSession } from "@/lib/auth/session";
 
 function apiErrorMessage(data, fallback) {
@@ -115,14 +116,68 @@ export async function cambiarEstadoPublicacionAction(formData) {
 
   const viajeId = Number(formData.get("viajeId"));
   const activo = String(formData.get("activo")) === "true";
+  const motivo = String(formData.get("motivo") ?? "").trim();
 
   if (!viajeId) {
     return;
   }
 
-  await cambiarEstadoPublicacion(viajeId, activo);
+  await cambiarEstadoPublicacion(viajeId, activo, motivo);
 
   revalidatePath("/");
   revalidatePath("/vendedor/mis-viajes");
   revalidatePath("/vendedor/admin");
+}
+
+/**
+ * Reprograma un viaje PAUSADO a una fecha nueva y lo vuelve a publicar.
+ * Como el backend no deja editar la disponibilidad de un viaje inactivo, primero
+ * reactiva el viaje y luego actualiza la fecha de su disponibilidad.
+ *
+ * @param {{ ok: boolean, error: string | null }} _prev
+ */
+export async function reprogramarViajeAction(_prev, formData) {
+  const session = await getSession();
+  if (!session?.token) redirect("/auth");
+
+  const viajeId = Number(formData.get("viajeId"));
+  const disponibilidadId = Number(formData.get("disponibilidadId"));
+  const cuposTotales = Number(formData.get("cuposTotales")) || 1;
+  const fecha = String(formData.get("fecha") ?? "").trim();
+  const fechaRetorno = String(formData.get("fechaRetorno") ?? "").trim() || null;
+
+  if (!viajeId || !disponibilidadId || !fecha) {
+    return { ok: false, error: "Selecciona una fecha de salida válida." };
+  }
+  if (fechaRetorno && fechaRetorno < fecha) {
+    return { ok: false, error: "La fecha de retorno no puede ser menor que la de salida." };
+  }
+
+  try {
+    // 1) Reactivar el viaje (necesario para poder editar su disponibilidad).
+    const rEstado = await cambiarEstadoPublicacion(viajeId, true);
+    if (rEstado.status === 401) redirect("/logout");
+    if (!rEstado.ok) {
+      return { ok: false, error: apiErrorMessage(rEstado.data, "No se pudo reactivar el viaje.") };
+    }
+
+    // 2) Actualizar la fecha de la disponibilidad.
+    const rDisp = await actualizarDisponibilidad(disponibilidadId, {
+      ViajeId: viajeId,
+      Fecha: fecha,
+      FechaRetorno: fechaRetorno,
+      CuposTotales: cuposTotales,
+      Activo: true,
+    });
+    if (rDisp.status === 401) redirect("/logout");
+    if (!rDisp.ok) {
+      return { ok: false, error: apiErrorMessage(rDisp.data, "Se reactivó el viaje, pero no se pudo cambiar la fecha.") };
+    }
+  } catch {
+    return { ok: false, error: "Ocurrió un error. Inténtalo de nuevo." };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/vendedor/mis-viajes");
+  return { ok: true, error: null };
 }

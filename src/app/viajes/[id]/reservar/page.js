@@ -55,7 +55,7 @@ export default async function ReservarPage({ params, searchParams }) {
         titulo={viaje.titulo}
         ubicacion={ubicacion}
         tipoNombre={viaje.tipoViaje?.nombre ?? "Paquete"}
-        imageUrl={`https://picsum.photos/seed/viaje-${viaje.viajeId}-1/240/240`}
+        imageUrl={viaje.imagenUrl ?? viaje.ImagenUrl ?? null}
         precio={Number(viaje.precio)}
         viajeros={viajeros}
         fechaLabel={seleccion ? formatDateRange(seleccion.fecha, seleccion.fechaRetorno) : "Por confirmar"}

@@ -30,7 +30,7 @@ function isAdminUser(usuario) {
   return Number.isFinite(rolId) && rolId === 1;
 }
 
-export function UserMenu({ nombre, usuario }) {
+export function UserMenu({ nombre, usuario, esVendedor = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const admin = isAdminUser(usuario);
@@ -109,6 +109,24 @@ export function UserMenu({ nombre, usuario }) {
           >
             Guardados
           </Link>
+
+          {esVendedor ? (
+            <Link
+              href="/vendedor/mis-viajes"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Mis viajes
+            </Link>
+          ) : (
+            <Link
+              href="/vendedor/publicar"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+            >
+              Vender viajes
+            </Link>
+          )}
 
           {admin ? (
             <Link

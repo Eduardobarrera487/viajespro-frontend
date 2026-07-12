@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
 import { hasAdminRole } from "@/lib/auth/roles";
+import { estadoCertificacion } from "@/lib/api/agentes";
 import { MainNav } from "@/components/layout/MainNav";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { PlaneLogoIcon, BellIcon } from "@/components/features/viajes/icons";
@@ -9,6 +10,11 @@ export async function SiteHeader() {
   const session = await getSession();
   const usuario = session?.usuario;
   const isAdmin = hasAdminRole(usuario);
+
+  // Es "vendedor" quien puede publicar: admin, o con certificación aprobada.
+  const esVendedor = usuario
+    ? isAdmin || (await estadoCertificacion()).estado === "aprobada"
+    : false;
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -21,7 +27,7 @@ export async function SiteHeader() {
             <span className="text-lg sm:text-xl">ViajesPro</span>
           </Link>
 
-          {usuario ? <MainNav usuario={usuario} /> : null}
+          {usuario ? <MainNav usuario={usuario} esVendedor={esVendedor} /> : null}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
@@ -51,7 +57,7 @@ export async function SiteHeader() {
                 <BellIcon className="h-5 w-5" />
               </button>
 
-              <UserMenu nombre={usuario.Nombre ?? usuario.nombre} usuario={usuario} />
+              <UserMenu nombre={usuario.Nombre ?? usuario.nombre} usuario={usuario} esVendedor={esVendedor} />
             </>
           ) : (
             <Link

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { cambiarEstadoPublicacionAction } from "@/lib/publicaciones/actions";
+import { ToggleEstadoViaje } from "@/components/features/vendedor/ToggleEstadoViaje";
+import { ReprogramarViaje } from "@/components/features/vendedor/ReprogramarViaje";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-US", {
@@ -42,6 +43,7 @@ export function MisViajesPanel({ viajes = [], admin = false }) {
         const ciudad = destino?.ciudad ?? destino?.Ciudad;
         const pais = ciudad?.pais ?? ciudad?.Pais;
         const disponibilidad = viaje.disponibilidad ?? viaje.Disponibilidad;
+        const dispId = disponibilidad?.disponibilidadId ?? disponibilidad?.DisponibilidadId;
         const imagen = viaje.imagenUrl ?? viaje.ImagenUrl;
         const activo = Boolean(viaje.activo ?? viaje.Activo);
         const viajeId = viaje.viajeId ?? viaje.ViajeId;
@@ -104,16 +106,19 @@ export function MisViajesPanel({ viajes = [], admin = false }) {
                   Ver público
                 </Link>
 
-                <form action={cambiarEstadoPublicacionAction}>
-                  <input type="hidden" name="viajeId" value={viajeId} />
-                  <input type="hidden" name="activo" value={(!activo).toString()} />
-                  <button
-                    type="submit"
-                    className="rounded-2xl bg-slate-950 px-4 py-2 font-semibold text-white hover:bg-slate-800"
-                  >
-                    {activo ? "Pausar" : "Publicar"}
-                  </button>
-                </form>
+                {activo ? (
+                  <ToggleEstadoViaje viajeId={viajeId} activo={activo} />
+                ) : dispId ? (
+                  <ReprogramarViaje
+                    viajeId={viajeId}
+                    disponibilidadId={dispId}
+                    cuposTotales={disponibilidad?.cuposTotales ?? disponibilidad?.CuposTotales ?? viaje.cuposTotales ?? viaje.CuposTotales ?? 1}
+                    fecha={disponibilidad?.fecha ?? disponibilidad?.Fecha}
+                    fechaRetorno={disponibilidad?.fechaRetorno ?? disponibilidad?.FechaRetorno}
+                  />
+                ) : (
+                  <ToggleEstadoViaje viajeId={viajeId} activo={false} />
+                )}
 
                 {admin ? (
                   <span className="rounded-2xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">

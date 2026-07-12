@@ -13,16 +13,18 @@ import { MapPinIcon } from "@/components/features/viajes/icons";
  */
 export function ViajeCard({ viaje }) {
   const ubicacion = [viaje.destino?.ciudad, viaje.destino?.pais].filter(Boolean).join(", ");
+  const imagen = viaje.imagenUrl ?? viaje.ImagenUrl;
 
   return (
     <Link
       href={`/viajes/${viaje.viajeId}`}
       className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-card transition-shadow hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
     >
-      <div className="relative h-44 overflow-hidden bg-slate-100">
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-blue-50 to-slate-100">
+        {/* Imagen real; si no hay, una aleatoria estable (sembrada por id) solo en exploración. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`https://picsum.photos/seed/viaje-${viaje.viajeId}-1/600/400`}
+          src={imagen ?? `https://picsum.photos/seed/viaje-${viaje.viajeId}/600/400`}
           alt={viaje.titulo}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"

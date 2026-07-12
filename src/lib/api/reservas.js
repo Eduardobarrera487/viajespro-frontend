@@ -67,11 +67,14 @@ export async function reagendarReserva(reservaId, nuevaDisponibilidadId) {
 }
 
 /** Solicita el reembolso de una reserva: POST /api/Reservas/{id}/reembolso. */
-export async function solicitarReembolso(reservaId) {
+export async function solicitarReembolso(reservaId, motivo = null) {
   const session = await getSession();
   if (!session?.token) return { ok: false, status: 401, data: null };
+  // El endpoint tiene [FromBody]: hay que mandar body JSON aunque Motivo sea opcional
+  // (si no, ASP.NET responde 415 Unsupported Media Type).
   return apiFetch(`/api/Reservas/${Number(reservaId)}/reembolso`, {
     method: "POST",
+    body: { Motivo: motivo },
     token: session.token,
   });
 }
